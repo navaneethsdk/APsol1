@@ -1,0 +1,84 @@
+{% extends 'blog/base.html' %}
+{% block content %}
+    <article class="media content-section">
+        <img src="{{ post.author.profile.image.url }}" alt="" class="rounded-circle article-img">
+      <div class="media-body">
+        <div class="article-metadata">
+          <a class="mr-2" href="{% url 'user-posts' post.author.username %}">{{ post.author }}</a>
+          <small class="text-muted">{{ post.date|date:"F d,Y"}}</small>
+          <div>
+              {% if post.author == user %}
+                  <a href="{% url 'post-update' post.id %}" class="btn btn-secondary btn-sm mt-1 mb-1">Update</a>
+                  <a href="{% url 'post-delete' post.id %}" class="btn btn-danger btn-sm mt-1 mb-1">Delete</a>
+              {% endif %}
+          </div>
+        </div>
+        <h2 class="article-title">{{ post.title }}</h2>
+        <p class="article-content">{{ post.content }}</p>
+        {{ total_likes }} Like{{ total_likes|pluralize }}
+      {% if request.user.is_authenticated %}
+        <form action="{% url 'like_post' %}" method="post">
+            {% csrf_token %}
+            {% if is_liked  %}
+                <button type="submit" name="post_id" value="{{ post.id }}" class="btn btn-info btn-sm mt-1 mb-1">Dislike</button>
+            {% else %}
+                <button type="submit" name="post_id" value="{{ post.id }}" class="btn btn-info btn-sm mt-1 mb-1">Like</button>
+            {% endif %}
+        </form>
+      {% endif %}
+      </div>
+    </article>
+
+
+    <br>
+    <hr>
+
+
+
+    <div class="main-comment-section">
+        <div class="container-fluid mt-2">
+            <div class="form-group row">
+                <form method = "post">
+                    {% csrf_token %}
+                    {{ comment_form.as_p }}
+                    {% if request.user.is_authenticated %}
+                        <input type="submit" value="Submit" class = "btn btn-outline-success">
+                    {% else %}
+                        <input type="submit" value="Submit" class = "btn btn-outline-success" disabled >
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+
+        {{ comments.count }} Comment{{ comments|pluralize }}
+        {% for comment in comments %}
+            <blockquote class="blockquote">
+              <p class="mb-0">{{ comment.content }}</p>
+              <footer class="blockquote-footer">by <cite title="Source Title">{{ comment.user|capfirst }}</cite>
+                <button type="button" name="button" class="reply-btn btn btn-outline-dark btn-sm ml-2">Reply</button>
+              </footer>
+            </blockquote>
+{#            <div class="replied-comments container mt-2 ml-2" style="display: none;">#}
+            <div class="replied-comments container mt-2 ml-2">
+                {% for reply in comment.replies.all %}
+                    <blockquote class="blockquote">
+                        <p class="mb-0"><small>{{ reply.content }}</small></p>
+                        <footer class="blockquote-footer"><small>by <cite title="Source Title">{{ comment.user|capfirst }}</cite></small></footer>
+                    </blockquote>
+                {% endfor %}
+                <form method = "post">
+                    {% csrf_token %}
+                    <input type="hidden" name="comment_id" value="{{ comment.id }}">
+                    {{ comment_form.as_p }}
+                    {% if request.user.is_authenticated %}
+                        <input type="submit" value="Submit" class = "btn btn-outline-success">
+                    {% else %}
+                        <input type="submit" value="Submit" class = "btn btn-outline-success" disabled >
+                    {% endif %}
+                </form>
+            </div>
+        {% endfor %}
+    </div>
+
+
+{% endblock content %}
